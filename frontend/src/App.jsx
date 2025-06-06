@@ -9,22 +9,7 @@ function App() {
   const [response, setResponse] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [examples, setExamples] = useState([])
   const [history, setHistory] = useState([])
-
-  // Fetch example queries on component mount
-  useEffect(() => {
-    fetchExamples()
-  }, [])
-
-  const fetchExamples = async () => {
-    try {
-      const result = await axios.get(`${API_BASE_URL}/api/examples`)
-      setExamples(result.data.examples)
-    } catch (err) {
-      console.error('Failed to fetch examples:', err)
-    }
-  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -58,10 +43,6 @@ function App() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleExampleClick = (exampleQuery) => {
-    setQuery(exampleQuery)
   }
 
   const formatSources = (sources) => {
@@ -108,27 +89,6 @@ function App() {
               </button>
             </div>
           </form>
-
-          {/* Example Queries */}
-          {examples.length > 0 && (
-            <div className="examples-section">
-              <h3>Example Queries:</h3>
-              <div className="examples-grid">
-                {examples.map((example, index) => (
-                  <div key={index} className="example-card">
-                    <div className="example-category">{example.category}</div>
-                    <div 
-                      className="example-query"
-                      onClick={() => handleExampleClick(example.query)}
-                    >
-                      "{example.query}"
-                    </div>
-                    <div className="example-tool">Expected tool: {example.expected_tool}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </section>
 
         {/* Error Display */}
