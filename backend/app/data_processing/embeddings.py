@@ -1,12 +1,12 @@
 from typing import List, Dict
 import chromadb
 from chromadb.config import Settings as ChromaSettings
-from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from ..config import settings
 
 class EmbeddingManager:
     def __init__(self):
-        self.embeddings = OpenAIEmbeddings(openai_api_key=settings.openai_api_key)
+        self.embeddings = OpenAIEmbeddings(api_key=settings.openai_api_key)
         self.chroma_client = chromadb.Client(ChromaSettings(
             persist_directory=settings.chroma_persist_directory
         ))
@@ -40,8 +40,4 @@ class EmbeddingManager:
                 results["metadatas"][0],
                 results["distances"][0]
             )
-        ]
-
-    def persist_changes(self):
-        """Persist changes to disk."""
-        self.chroma_client.persist() 
+        ] 

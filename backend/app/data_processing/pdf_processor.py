@@ -1,14 +1,16 @@
 from typing import List, Dict
 import pypdf
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 import chromadb
 from chromadb.config import Settings as ChromaSettings
 from ..config import settings
+from dotenv import load_dotenv
+load_dotenv()
 
 class PDFProcessor:
     def __init__(self):
-        self.embeddings = OpenAIEmbeddings(openai_api_key=settings.openai_api_key)
+        self.embeddings = OpenAIEmbeddings(api_key=settings.openai_api_key)
         self.chroma_client = chromadb.Client(ChromaSettings(
             persist_directory=settings.chroma_persist_directory
         ))
@@ -23,21 +25,20 @@ class PDFProcessor:
                 pages.append(page.extract_text())
         return pages
 
-    def chunk_text(self, text: str, chunk_size: int, overlap: int) -> List[Dict]:
-        """Split text into chunks with metadata."""
+    def chunk_text(self, page_text: str, page_num: int, chunk_size: int, overlap: int) -> List[Dict]:
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
             chunk_overlap=overlap,
             length_function=len,
         )
         
-        chunks = text_splitter.split_text(text)
+        chunks = text_splitter.split_text(page_text)
         return [
             {
                 "text": chunk,
                 "metadata": {
                     "source": "ARN42404-FM_5-0-000-WEB-1.pdf",
-                    "page": i // len(chunks) + 1,
+                    "page": page_num,
                     "chunk_index": i
                 }
             }
@@ -51,7 +52,7 @@ class PDFProcessor:
         
         # Process each page
         for page_num, page_text in enumerate(pages, 1):
-            chunks = self.chunk_text(page_text, settings.chunk_size, settings.chunk_overlap)
+            chunks = self.chunk_text(page_text, page_num, settings.chunk_size, settings.chunk_overlap)
             
             # Add to ChromaDB
             for chunk in chunks:
@@ -59,7 +60,4 @@ class PDFProcessor:
                     documents=[chunk["text"]],
                     metadatas=[chunk["metadata"]],
                     ids=[f"page_{page_num}_chunk_{chunk['metadata']['chunk_index']}"]
-                )
-        
-        # Persist changes
-        self.chroma_client.persist() 
+                ) 
