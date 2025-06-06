@@ -1,7 +1,13 @@
 from typing import List, Dict
 import pandas as pd
 from difflib import SequenceMatcher
-from ..config import settings
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from config import settings
 
 class CSVProcessor:
     def __init__(self):
@@ -48,4 +54,4 @@ class CSVProcessor:
     def process_csv(self) -> Dict:
         """Load and process CSV file."""
         self.df = self.load_csv(settings.csv_path)
-        return self.create_search_index(self.df) 
+        return self.create_search_index(self.df)

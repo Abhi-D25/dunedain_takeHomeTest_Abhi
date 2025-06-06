@@ -1,10 +1,16 @@
+import sys
+import os
 from typing import List, Dict
 import pypdf
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 import chromadb
 from chromadb.config import Settings as ChromaSettings
-from ..config import settings
+from dotenv import load_dotenv
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from config import settings
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -60,4 +66,4 @@ class PDFProcessor:
                     documents=[chunk["text"]],
                     metadatas=[chunk["metadata"]],
                     ids=[f"page_{page_num}_chunk_{chunk['metadata']['chunk_index']}"]
-                ) 
+                )

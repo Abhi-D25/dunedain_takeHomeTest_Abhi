@@ -2,7 +2,13 @@ from typing import List, Dict
 import chromadb
 from chromadb.config import Settings as ChromaSettings
 from langchain_openai import OpenAIEmbeddings
-from ..config import settings
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from config import settings
 
 class EmbeddingManager:
     def __init__(self):
@@ -40,4 +46,4 @@ class EmbeddingManager:
                 results["metadatas"][0],
                 results["distances"][0]
             )
-        ] 
+        ]
