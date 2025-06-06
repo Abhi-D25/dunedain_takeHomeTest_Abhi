@@ -4,45 +4,6 @@ import './App.css'
 
 const API_BASE_URL = 'http://localhost:8000'
 
-// Example queries from the PDF requirements
-const EXAMPLE_QUERIES = [
-  {
-    category: "Award Generation (Example 1)",
-    query: "Write an award bullet for a Soldier that got a 600 on their ACFT",
-    expectedTool: "csv + pdf (hybrid)",
-    description: "Should find ACFT context from PDF and award template from CSV",
-    icon: "🏆"
-  },
-  {
-    category: "Information Retrieval (Example 2)", 
-    query: "What is the role of the S6 during MDMP?",
-    expectedTool: "pdf",
-    description: "Should search PDF for MDMP procedures and S6 roles",
-    icon: "📋"
-  },
-  {
-    category: "Hybrid Generation (Example 3)",
-    query: "Write a situation paragraph for my infantry battalion's upcoming mission at NTC",
-    expectedTool: "csv + pdf (hybrid)",
-    description: "Should use CSV for paragraph structure and PDF for military context",
-    icon: "🎯"
-  },
-  {
-    category: "Template-Focused Generation",
-    query: "Create a character assessment for an NCO evaluation",
-    expectedTool: "csv",
-    description: "Should focus on evaluation report templates",
-    icon: "📝"
-  },
-  {
-    category: "Knowledge-Focused Query",
-    query: "Explain the steps of the military decision making process",
-    expectedTool: "pdf",
-    description: "Should provide detailed MDMP information from manuals",
-    icon: "🔍"
-  }
-]
-
 function App() {
   const [query, setQuery] = useState('')
   const [response, setResponse] = useState(null)
@@ -116,13 +77,6 @@ function App() {
     }
   }
 
-  const handleExampleClick = (exampleQuery) => {
-    setQuery(exampleQuery)
-    setActiveTab('query')
-    // Auto-scroll to query section
-    document.querySelector('.query-section')?.scrollIntoView({ behavior: 'smooth' })
-  }
-
   const formatSources = (sources) => {
     const { csv_results = [], pdf_results = [] } = sources || {}
     let sourceText = []
@@ -183,12 +137,6 @@ function App() {
           💬 Ask Question
         </button>
         <button 
-          className={`tab-button ${activeTab === 'examples' ? 'active' : ''}`}
-          onClick={() => setActiveTab('examples')}
-        >
-          📚 Examples
-        </button>
-        <button 
           className={`tab-button ${activeTab === 'history' ? 'active' : ''}`}
           onClick={() => setActiveTab('history')}
         >
@@ -211,7 +159,7 @@ function App() {
                   <textarea
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Examples:&#10;• Write an award bullet for a Soldier that got a 600 on their ACFT&#10;• What is the role of the S6 during MDMP?&#10;• Explain the steps of the military decision making process"
+                    placeholder="Enter your question here..."
                     className="query-input"
                     rows={4}
                     disabled={loading}
@@ -255,59 +203,6 @@ function App() {
                   )}
                 </div>
               </div>
-            </div>
-
-            {/* Quick Examples */}
-            <div className="quick-examples">
-              <h4>Quick Start:</h4>
-              <div className="quick-example-buttons">
-                <button 
-                  onClick={() => handleExampleClick("Write an award bullet for a Soldier that got a 600 on their ACFT")}
-                  className="quick-example-btn"
-                >
-                  🏆 Award Bullet
-                </button>
-                <button 
-                  onClick={() => handleExampleClick("What is the role of the S6 during MDMP?")}
-                  className="quick-example-btn"
-                >
-                  📋 S6 Role
-                </button>
-                <button 
-                  onClick={() => handleExampleClick("Explain the steps of MDMP")}
-                  className="quick-example-btn"
-                >
-                  🔍 MDMP Steps
-                </button>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Examples Tab */}
-        {activeTab === 'examples' && (
-          <section className="examples-section">
-            <div className="section-header">
-              <h2>Example Queries</h2>
-              <p>Click on any example to try it out</p>
-            </div>
-            
-            <div className="examples-grid">
-              {EXAMPLE_QUERIES.map((example, index) => (
-                <div 
-                  key={index}
-                  className="example-card"
-                  onClick={() => handleExampleClick(example.query)}
-                >
-                  <div className="example-icon">{example.icon}</div>
-                  <div className="example-content">
-                    <div className="example-category">{example.category}</div>
-                    <div className="example-query">"{example.query}"</div>
-                    <div className="example-tool">Expected: {example.expectedTool}</div>
-                    <div className="example-description">{example.description}</div>
-                  </div>
-                </div>
-              ))}
             </div>
           </section>
         )}
@@ -353,7 +248,11 @@ function App() {
                       {entry.response.answer.length > 300 ? '...' : ''}
                     </div>
                     <button 
-                      onClick={() => handleExampleClick(entry.question)}
+                      onClick={() => {
+                        setQuery(entry.question);
+                        setActiveTab('query');
+                        handleSubmit(new Event('submit'));
+                      }}
                       className="retry-btn"
                     >
                       🔄 Ask Again
