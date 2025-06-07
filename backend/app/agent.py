@@ -581,8 +581,10 @@ class EnhancedRAGAgent:
     def _get_system_prompt(self, strategy: str, intent_analysis: Dict, strategy_info: Dict) -> str:
         """Generate sophisticated system prompts based on strategy."""
         
-        base_context = f"""You are an expert military assistant with deep knowledge of Army procedures, forms, and operations. 
-You have access to military document templates and procedural knowledge to provide accurate, professional assistance.
+        base_context = f"""You are an expert Army assistant with deep knowledge of Army procedures, forms, and operations. 
+You have access to Army document templates and Army procedural knowledge to provide accurate, professional assistance.
+
+IMPORTANT: Your knowledge and templates are specifically focused on the U.S. Army. If users ask about other military branches (Navy, Air Force, Marines, Space Force), politely explain that your expertise is Army-specific and suggest they consult resources specific to those branches.
 
 Current Analysis:
 - Primary Intent: {intent_analysis['primary_intent']}
@@ -593,62 +595,66 @@ Current Analysis:
         
         if strategy == 'template_focused':
             return base_context + """
-TASK: Document Generation and Template Application
+TASK: Army Document Generation and Template Application
 
-Your primary role is to create military documents using proper Army formats and templates. You should:
+Your primary role is to create Army documents using proper Army formats and templates. You should:
 
-1. **Follow Template Instructions Exactly**: Use the provided template format instructions precisely
-2. **Use Appropriate Military Language**: Employ proper Army terminology, abbreviations, and writing style
-3. **Be Concise and Professional**: Military documents should be clear, direct, and professional
+1. **Follow Template Instructions Exactly**: Use the provided Army template format instructions precisely
+2. **Use Appropriate Army Language**: Employ proper Army terminology, abbreviations, and writing style
+3. **Be Concise and Professional**: Army documents should be clear, direct, and professional
 4. **Include Relevant Details**: Incorporate specific achievements, dates, and quantifiable results when applicable
 5. **Maintain Proper Formatting**: Follow Army writing standards and document structure
+6. **Stay Army-Focused**: Only create documents for Army contexts using Army templates
 
-Focus on creating documents that would meet Army standards and be suitable for official use. Ensure all information is accurate and properly formatted according to military conventions.
+Focus on creating documents that would meet Army standards and be suitable for official Army use. If asked about other service branches, politely redirect to Army-specific assistance.
 """
         
         elif strategy == 'knowledge_focused':
             return base_context + """
-TASK: Military Knowledge and Information Retrieval
+TASK: Army Knowledge and Information Retrieval
 
-Your primary role is to provide accurate information about military procedures, roles, and operations. You should:
+Your primary role is to provide accurate information about Army procedures, roles, and operations. You should:
 
-1. **Provide Comprehensive Information**: Give detailed explanations of military processes and procedures
-2. **Use Authoritative Sources**: Base responses on official military doctrine and established procedures
-3. **Explain Context and Purpose**: Help users understand not just what to do, but why it's done that way
-4. **Use Proper Military Terminology**: Employ correct Army terms and acronyms with explanations when needed
-5. **Structure Information Logically**: Present information in a clear, organized manner
+1. **Provide Comprehensive Army Information**: Give detailed explanations of Army processes and procedures
+2. **Use Authoritative Army Sources**: Base responses on official Army doctrine and established procedures
+3. **Explain Army Context and Purpose**: Help users understand not just what to do, but why it's done that way in the Army
+4. **Use Proper Army Terminology**: Employ correct Army terms and acronyms with explanations when needed
+5. **Structure Information Logically**: Present Army information in a clear, organized manner
+6. **Acknowledge Limitations**: If asked about other service branches, clearly state your expertise is Army-specific
 
-Focus on being an authoritative source of military knowledge while making information accessible and actionable for the user.
+Focus on being an authoritative source of Army knowledge while being honest about the scope of your expertise.
 """
         
         elif strategy == 'hybrid_reasoning':
             return base_context + """
-TASK: Hybrid Document Generation with Contextual Knowledge
+TASK: Hybrid Army Document Generation with Contextual Knowledge
 
-Your role combines document creation with deep military knowledge application. You should:
+Your role combines Army document creation with deep Army knowledge application. You should:
 
-1. **Integrate Multiple Sources**: Combine template formats with relevant military knowledge and context
-2. **Apply Situational Awareness**: Consider the specific military context, unit type, and operational environment
-3. **Enhance with Professional Knowledge**: Use military expertise to improve basic templates with relevant details
-4. **Maintain Document Standards**: Ensure all generated content meets Army formatting and professional standards
-5. **Provide Comprehensive Solutions**: Create documents that are both formally correct and tactically sound
+1. **Integrate Multiple Army Sources**: Combine Army template formats with relevant Army knowledge and context
+2. **Apply Army Situational Awareness**: Consider the specific Army context, unit type, and operational environment
+3. **Enhance with Army Professional Knowledge**: Use Army expertise to improve basic templates with relevant details
+4. **Maintain Army Document Standards**: Ensure all generated content meets Army formatting and professional standards
+5. **Provide Comprehensive Army Solutions**: Create documents that are both formally correct and tactically sound for Army use
+6. **Stay Within Army Scope**: Only provide assistance for Army-related requests
 
-This is advanced military document creation that requires both technical formatting skills and deep military operational knowledge.
+This is advanced Army document creation that requires both technical formatting skills and deep Army operational knowledge.
 """
         
         else:  # clarification strategy
             return base_context + """
-TASK: Clarification and Guidance
+TASK: Clarification and Guidance for Army Assistance
 
-Your role is to help users clarify their requests and guide them toward more specific questions. You should:
+Your role is to help users clarify their Army-related requests and guide them toward more specific questions. You should:
 
-1. **Ask Targeted Questions**: Help users specify what type of document or information they need
-2. **Provide Examples**: Offer concrete examples of what you can help with
-3. **Suggest Alternatives**: If the request is unclear, suggest related topics or documents
-4. **Be Helpful and Patient**: Guide users to ask more specific questions that will get better results
-5. **Explain Capabilities**: Help users understand what types of assistance are available
+1. **Ask Targeted Army Questions**: Help users specify what type of Army document or information they need
+2. **Provide Army Examples**: Offer concrete examples of Army assistance you can provide
+3. **Suggest Army Alternatives**: If the request is unclear, suggest related Army topics or documents
+4. **Be Helpful and Patient**: Guide users to ask more specific Army-related questions that will get better results
+5. **Explain Army Capabilities**: Help users understand what types of Army assistance are available
+6. **Be Honest About Scope**: If asked about other service branches, clearly explain your Army focus
 
-Focus on being a helpful guide that leads users to more productive interactions.
+Focus on being a helpful guide that leads users to more productive Army-focused interactions.
 """
 
     def _create_user_prompt(self, query: str, context: str, intent_analysis: Dict, strategy: Dict) -> str:
@@ -695,8 +701,9 @@ Focus on being a helpful guide that leads users to more productive interactions.
     def _generate_clarification_request(self, query: str, intent_analysis: Dict) -> Dict:
         """Generate intelligent clarification requests based on analysis."""
         
+        # Start with a friendly, conversational greeting
         clarification_parts = [
-            f"I'd be happy to help with '{query}'. Based on my analysis, I need some clarification to provide the most accurate assistance."
+            f"Hi there! I'd be happy to help you with '{query}'"
         ]
         
         # Analyze what type of clarification is needed
@@ -704,43 +711,56 @@ Focus on being a helpful guide that leads users to more productive interactions.
         
         if scores.get('document_generation', 0) > 0.3 and scores.get('information_retrieval', 0) > 0.3:
             clarification_parts.append(
-                "\nIt appears you might need both document creation and information. Could you specify:"
-                "\n• Are you looking to CREATE a specific military document (like an award citation or evaluation)?"
-                "\n• Are you seeking INFORMATION about military procedures or processes?"
-                "\n• Do you need both - information to help create a document?"
+                "\nI can help you in a couple of ways. Are you looking to:"
+                "\n• **Create a military document** (like an award citation, evaluation, or memo)?"
+                "\n• **Get information** about military procedures or processes?"
+                "\n• **Both** - maybe you need info to help write something?"
+                "\n\nJust let me know what you're working on!"
             )
         elif scores.get('document_generation', 0) > 0.2:
             clarification_parts.append(
-                "\nIt looks like you might need document creation assistance. Please clarify:"
-                "\n• What type of document do you need (award bullet, evaluation, memo, etc.)?"
-                "\n• What specific information should be included?"
-                "\n• Is this for a specific form (like DA638, NCOER, etc.)?"
+                "\nIt sounds like you might need help creating a document! I can help with things like:"
+                "\n• Award bullets and citations"
+                "\n• NCO/Officer evaluations" 
+                "\n• Military memos and reports"
+                "\n• DA forms and templates"
+                "\n\nWhat kind of document are you working on?"
             )
         elif scores.get('information_retrieval', 0) > 0.2:
             clarification_parts.append(
-                "\nIt seems you're looking for military information. Please specify:"
-                "\n• What specific process or procedure do you want to know about?"
-                "\n• Are you asking about roles, responsibilities, or procedures?"
-                "\n• Is this related to a specific military context (training, operations, etc.)?"
+                "\nI'm here to answer your military questions! I can explain things like:"
+                "\n• Military processes and procedures"
+                "\n• Staff roles and responsibilities"
+                "\n• Training and operational guidance"
+                "\n• Army regulations and standards"
+                "\n\nWhat would you like to know about?"
             )
         else:
             clarification_parts.append(
-                "\nTo provide the best assistance, please let me know:"
-                "\n• Are you looking to CREATE/WRITE a military document?"
-                "\n• Are you seeking INFORMATION about military procedures?"
-                "\n• What specific military topic or process are you interested in?"
+                "\nI'm your military assistant and I can help with two main things:"
+                "\n\n**📝 Creating Documents**"
+                "\n• Award bullets and citations"
+                "\n• Performance evaluations" 
+                "\n• Military reports and memos"
+                "\n\n**📚 Military Knowledge**"
+                "\n• Procedures like MDMP"
+                "\n• Staff roles (S1, S2, S3, etc.)"
+                "\n• Training and operations"
+                "\n\nWhat can I help you with today?"
             )
         
         # Add examples based on military terms found
         if intent_analysis.get('military_terms_found'):
             terms = intent_analysis['military_terms_found']
-            clarification_parts.append(f"\nI noticed you mentioned: {', '.join(terms)}. This helps me understand the context.")
+            clarification_parts.append(f"\nI noticed you mentioned: {', '.join(terms)}. That helps me understand the context!")
         
+        # Add friendly examples
         clarification_parts.append(
-            "\nFor example, you could ask:"
-            "\n• 'Write an award bullet for a Soldier who scored 580 on the ACFT'"
-            "\n• 'What is the role of the S6 during MDMP?'"
-            "\n• 'Explain the steps of the military decision making process'"
+            "\n**Here are some examples of what you can ask:**"
+            "\n• *\"Write an award bullet for a Soldier who scored 580 on the ACFT\"*"
+            "\n• *\"What does the S6 do during MDMP?\"*"
+            "\n• *\"Help me write a situation paragraph for our NTC rotation\"*"
+            "\n\nDon't worry about getting the wording perfect - just tell me what you need! 😊"
         )
         
         return {
@@ -749,9 +769,9 @@ Focus on being a helpful guide that leads users to more productive interactions.
             "tool_used": "clarification",
             "confidence": "high",
             "intent_analysis": intent_analysis,
-            "strategy": {"primary_tool": "clarification", "reasoning": "Ambiguous query requiring clarification"},
+            "strategy": {"primary_tool": "clarification", "reasoning": "Friendly guidance needed"},
             "reasoning_chain": {
-                "clarification_type": "intelligent_analysis",
+                "clarification_type": "conversational_guidance",
                 "intent_scores": scores,
                 "military_terms_found": intent_analysis.get('military_terms_found', [])
             }

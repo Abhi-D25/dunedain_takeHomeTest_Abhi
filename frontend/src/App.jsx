@@ -106,15 +106,6 @@ function App() {
     }
   }
 
-  const getConfidenceColor = (confidence) => {
-    switch (confidence) {
-      case 'high': return '#27ae60'
-      case 'medium': return '#f39c12'
-      case 'low': return '#e74c3c'
-      default: return '#95a5a6'
-    }
-  }
-
   return (
     <div className="App">
       {/* Header */}
@@ -290,13 +281,7 @@ function App() {
                 </h3>
                 <div className="response-meta">
                   <span className="tool-used">
-                    Tool: {response.tool_used}
-                  </span>
-                  <span 
-                    className="confidence"
-                    style={{ backgroundColor: getConfidenceColor(response.confidence) }}
-                  >
-                    {response.confidence} confidence
+                    Primary Tool: {response.tool_used}
                   </span>
                 </div>
               </div>
