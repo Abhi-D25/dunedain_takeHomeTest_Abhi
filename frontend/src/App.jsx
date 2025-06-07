@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import './App.css'
 
 const API_BASE_URL = 'http://localhost:8000'
@@ -13,11 +13,45 @@ function App() {
   const [activeTab, setActiveTab] = useState('query')
   const [sessionId] = useState(() => `session-${Date.now()}`)
   const [showSources, setShowSources] = useState(false)
+  const [isTyping, setIsTyping] = useState(false)
+  const textareaRef = useRef(null)
+  const responseRef = useRef(null)
 
-  // Check system status on load
+  // Check system status on load with enhanced feedback
   useEffect(() => {
     checkSystemHealth()
+    const interval = setInterval(checkSystemHealth, 30000) // Check every 30 seconds
+    return () => clearInterval(interval)
   }, [])
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + 'px'
+    }
+  }, [query])
+
+  // Scroll to response when it appears
+  useEffect(() => {
+    if (response && responseRef.current) {
+      setTimeout(() => {
+        responseRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start',
+          inline: 'nearest'
+        })
+      }, 100)
+    }
+  }, [response])
+
+  // Typing indicator effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsTyping(query.length > 0)
+    }, 150)
+    return () => clearTimeout(timer)
+  }, [query])
 
   const checkSystemHealth = async () => {
     try {
@@ -58,12 +92,13 @@ function App() {
       const data = await result.json()
       setResponse(data)
       
-      // Add to history
+      // Add to history with enhanced metadata
       const newEntry = {
         id: Date.now(),
         question: query,
         response: data,
-        timestamp: new Date().toLocaleTimeString()
+        timestamp: new Date().toLocaleTimeString(),
+        date: new Date().toLocaleDateString()
       }
       setHistory(prev => [newEntry, ...prev])
       
@@ -71,6 +106,54 @@ function App() {
     } catch (err) {
       setError(err.message || 'An error occurred while processing your query')
       console.error('Query error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleExampleClick = (exampleQuery) => {
+    setQuery(exampleQuery)
+    setActiveTab('query')
+    // Add a small delay for better UX
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus()
+      }
+    }, 200)
+  }
+
+  const retryQuery = async (questionToRetry) => {
+    setQuery(questionToRetry)
+    setActiveTab('query')
+    
+    // Simulate form submission
+    const fakeEvent = { preventDefault: () => {} }
+    setLoading(true)
+    setError('')
+    setResponse(null)
+
+    try {
+      const result = await fetch(`${API_BASE_URL}/api/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: questionToRetry,
+          session_id: sessionId
+        })
+      })
+
+      if (!result.ok) {
+        const errorData = await result.json()
+        throw new Error(errorData.detail || 'Request failed')
+      }
+
+      const data = await result.json()
+      setResponse(data)
+      
+    } catch (err) {
+      setError(err.message || 'An error occurred while processing your query')
     } finally {
       setLoading(false)
     }
@@ -85,7 +168,6 @@ function App() {
     }
     
     if (pdf_results && pdf_results.length > 0) {
-      // Extract unique source files from PDF results
       const uniqueSources = [...new Set(pdf_results.map(r => r.source).filter(Boolean))]
       if (uniqueSources.length > 0) {
         sourceText.push(`${uniqueSources.join(', ')} (${pdf_results.length} sections)`)
@@ -106,44 +188,70 @@ function App() {
     }
   }
 
+  const getConfidenceColor = (tool) => {
+    switch (tool) {
+      case 'csv': return '#10b981'
+      case 'pdf': return '#3b82f6'
+      case 'clarification': return '#f59e0b'
+      default: return '#6b7280'
+    }
+  }
+
   return (
     <div className="App">
-      {/* Header */}
+      {/* Enhanced Header with Particles */}
       <header className="app-header">
         <div className="header-content">
-          <h1>🎖️ Military RAG Agent System</h1>
-          <p>Intelligent document generation and military knowledge assistant</p>
+          <div className="header-particles"></div>
+          <h1 className="header-title">
+            <span className="title-icon">🎖️</span>
+            <span className="title-text">Military RAG Agent</span>
+          </h1>
+          <p className="header-subtitle">
+            Intelligent document generation and military knowledge assistant
+          </p>
           
-          {/* System Status Indicator */}
+          {/* Enhanced System Status */}
           {systemStatus && (
             <div className={`status-indicator ${systemStatus.status}`}>
-              <span className="status-dot"></span>
-              {systemStatus.status === 'healthy' ? 'System Ready' : 'System Issues'}
+              <div className="status-dot"></div>
+              <span className="status-text">
+                {systemStatus.status === 'healthy' ? 'System Ready' : 'System Issues'}
+              </span>
+              {systemStatus.status === 'healthy' && (
+                <div className="status-wave"></div>
+              )}
             </div>
           )}
         </div>
       </header>
 
-      {/* Navigation Tabs */}
+      {/* Enhanced Navigation */}
       <nav className="tab-navigation">
         <button 
           className={`tab-button ${activeTab === 'query' ? 'active' : ''}`}
           onClick={() => setActiveTab('query')}
         >
-          💬 Ask Question
+          <span className="tab-icon">💬</span>
+          <span className="tab-text">Ask Question</span>
+          {isTyping && activeTab !== 'query' && <div className="typing-indicator"></div>}
         </button>
         <button 
           className={`tab-button ${activeTab === 'history' ? 'active' : ''}`}
           onClick={() => setActiveTab('history')}
         >
-          🕒 History ({history.length})
+          <span className="tab-icon">🕒</span>
+          <span className="tab-text">History</span>
+          {history.length > 0 && (
+            <span className="history-count">{history.length}</span>
+          )}
         </button>
       </nav>
 
       <main className="main-content">
-        {/* Query Tab */}
+        {/* Enhanced Query Tab */}
         {activeTab === 'query' && (
-          <section className="query-section">
+          <section className="query-section slide-in">
             <div className="section-header">
               <h2>Submit Your Query</h2>
               <p>Ask about military procedures or request document generation</p>
@@ -153,11 +261,12 @@ function App() {
               <div className="input-group">
                 <div className="textarea-container">
                   <textarea
+                    ref={textareaRef}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Enter your question here..."
-                    className="query-input"
-                    rows={4}
+                    placeholder="Enter your question here... (Ctrl+Enter to submit)"
+                    className={`query-input ${isTyping ? 'typing' : ''}`}
+                    rows={3}
                     disabled={loading}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && e.ctrlKey && !loading && query.trim()) {
@@ -165,8 +274,11 @@ function App() {
                       }
                     }}
                   />
-                  <div className="character-count">
-                    {query.length} characters
+                  <div className="input-effects">
+                    <div className="character-count">
+                      {query.length} characters
+                    </div>
+                    {isTyping && <div className="typing-pulse"></div>}
                   </div>
                 </div>
                 
@@ -178,12 +290,13 @@ function App() {
                   >
                     {loading ? (
                       <>
-                        <span className="loading-spinner"></span>
-                        Processing...
+                        <div className="loading-spinner"></div>
+                        <span>Processing...</span>
                       </>
                     ) : (
                       <>
-                        🚀 Submit Query
+                        <span className="button-icon">🚀</span>
+                        <span>Submit Query</span>
                       </>
                     )}
                   </button>
@@ -194,7 +307,8 @@ function App() {
                       className="submit-button secondary"
                       disabled={loading}
                     >
-                      Clear
+                      <span className="button-icon">🗑️</span>
+                      <span>Clear</span>
                     </button>
                   )}
                 </div>
@@ -203,9 +317,9 @@ function App() {
           </section>
         )}
 
-        {/* History Tab */}
+        {/* Enhanced History Tab */}
         {activeTab === 'history' && (
-          <section className="history-section">
+          <section className="history-section slide-in">
             <div className="section-header">
               <h2>Query History</h2>
               <p>Your recent interactions with the system</p>
@@ -214,6 +328,7 @@ function App() {
                   onClick={() => setHistory([])}
                   className="clear-history-btn"
                 >
+                  <span className="button-icon">🗑️</span>
                   Clear History
                 </button>
               )}
@@ -226,15 +341,15 @@ function App() {
               </div>
             ) : (
               <div className="history-list">
-                {history.map((entry) => (
-                  <div key={entry.id} className="history-item">
+                {history.map((entry, index) => (
+                  <div key={entry.id} className={`history-item fade-in-delay-${index % 3}`}>
                     <div className="history-header">
                       <div className="history-question">
                         <strong>Q:</strong> {entry.question}
                       </div>
                       <div className="history-meta">
-                        <span className="timestamp">{entry.timestamp}</span>
-                        <span className="tool-badge">
+                        <span className="timestamp">{entry.date} {entry.timestamp}</span>
+                        <span className="tool-badge" style={{backgroundColor: getConfidenceColor(entry.response.tool_used)}}>
                           {getToolIcon(entry.response.tool_used)} {entry.response.tool_used}
                         </span>
                       </div>
@@ -244,14 +359,12 @@ function App() {
                       {entry.response.answer.length > 300 ? '...' : ''}
                     </div>
                     <button 
-                      onClick={() => {
-                        setQuery(entry.question);
-                        setActiveTab('query');
-                        handleSubmit(new Event('submit'));
-                      }}
+                      onClick={() => retryQuery(entry.question)}
                       className="retry-btn"
+                      disabled={loading}
                     >
-                      🔄 Ask Again
+                      <span className="button-icon">🔄</span>
+                      Ask Again
                     </button>
                   </div>
                 ))}
@@ -260,27 +373,35 @@ function App() {
           </section>
         )}
 
-        {/* Error Display */}
+        {/* Enhanced Error Display */}
         {error && (
-          <div className="error-message">
-            <div className="error-icon">⚠️</div>
-            <div>
-              <strong>Error:</strong> {error}
-              <button onClick={() => setError('')} className="dismiss-error">×</button>
+          <div className="error-message shake">
+            <div className="error-content">
+              <div className="error-icon">⚠️</div>
+              <div className="error-text">
+                <strong>Error:</strong> {error}
+              </div>
             </div>
+            <button onClick={() => setError('')} className="dismiss-error">
+              ×
+            </button>
           </div>
         )}
 
-        {/* Response Display */}
+        {/* Enhanced Response Display */}
         {response && (
-          <section className="response-section">
+          <section ref={responseRef} className="response-section slide-up">
             <div className="response-card">
               <div className="response-header">
-                <h3>
-                  {getToolIcon(response.tool_used)} Response
+                <h3 className="response-title">
+                  <span className="response-icon">{getToolIcon(response.tool_used)}</span>
+                  <span>Response</span>
                 </h3>
                 <div className="response-meta">
-                  <span className="tool-used">
+                  <span 
+                    className="tool-used"
+                    style={{backgroundColor: getConfidenceColor(response.tool_used)}}
+                  >
                     Primary Tool: {response.tool_used}
                   </span>
                 </div>
@@ -293,29 +414,36 @@ function App() {
                 
                 <div className="response-footer">
                   <div className="sources-summary">
-                    <strong>Sources Used:</strong> {formatSources(response.sources)}
+                    <div className="sources-info">
+                      <strong>📚 Sources Used:</strong> {formatSources(response.sources)}
+                    </div>
                     {response.sources && (response.sources.csv_results?.length > 0 || response.sources.pdf_results?.length > 0) && (
                       <button 
                         onClick={() => setShowSources(!showSources)}
                         className="toggle-sources-btn"
                       >
-                        {showSources ? 'Hide' : 'Show'} Details
+                        <span>{showSources ? '👁️‍🗨️ Hide' : '👁️ Show'} Details</span>
+                        <span className={`arrow ${showSources ? 'up' : 'down'}`}>▼</span>
                       </button>
                     )}
                   </div>
                   
                   {showSources && response.sources && (
-                    <div className="sources-detail">
+                    <div className="sources-detail slide-down">
                       {response.sources.csv_results?.length > 0 && (
                         <div className="source-group">
                           <h5>📊 template_fields.csv:</h5>
                           <ul>
                             {response.sources.csv_results.map((source, idx) => (
-                              <li key={idx}>
-                                <strong>{source.template_name}</strong> - {source.field_label}
-                                {source.relevance_score && (
-                                  <span className="relevance-score"> (Relevance: {(source.relevance_score * 100).toFixed(0)}%)</span>
-                                )}
+                              <li key={idx} className="source-item">
+                                <div className="source-content">
+                                  <strong>{source.template_name}</strong> - {source.field_label}
+                                  {source.relevance_score && (
+                                    <span className="relevance-score">
+                                      Relevance: {(source.relevance_score * 100).toFixed(0)}%
+                                    </span>
+                                  )}
+                                </div>
                               </li>
                             ))}
                           </ul>
@@ -327,16 +455,20 @@ function App() {
                           <h5>📄 PDF Documents:</h5>
                           <ul>
                             {response.sources.pdf_results.map((source, idx) => (
-                              <li key={idx}>
-                                <strong>{source.source || 'ARN42404-FM_5-0-000-WEB-1.pdf'}</strong> - Page {source.page}
-                                {source.relevance_score && (
-                                  <span className="relevance-score"> (Relevance: {(source.relevance_score * 100).toFixed(0)}%)</span>
-                                )}
-                                {source.military_terms_matched?.length > 0 && (
-                                  <div className="military-terms">
-                                    Military terms: {source.military_terms_matched.join(', ')}
-                                  </div>
-                                )}
+                              <li key={idx} className="source-item">
+                                <div className="source-content">
+                                  <strong>{source.source || 'ARN42404-FM_5-0-000-WEB-1.pdf'}</strong> - Page {source.page}
+                                  {source.relevance_score && (
+                                    <span className="relevance-score">
+                                      Relevance: {(source.relevance_score * 100).toFixed(0)}%
+                                    </span>
+                                  )}
+                                  {source.military_terms_matched?.length > 0 && (
+                                    <div className="military-terms">
+                                      🎯 Military terms: {source.military_terms_matched.join(', ')}
+                                    </div>
+                                  )}
+                                </div>
                               </li>
                             ))}
                           </ul>
@@ -347,7 +479,7 @@ function App() {
                   
                   {response.classification && (
                     <div className="classification-info">
-                      <strong>Reasoning:</strong> {response.classification.reasoning}
+                      <strong>🧠 Reasoning:</strong> {response.classification.reasoning}
                     </div>
                   )}
                 </div>
@@ -357,9 +489,14 @@ function App() {
         )}
       </main>
 
-      {/* Footer */}
+      {/* Enhanced Footer */}
       <footer className="app-footer">
-        <p>💡 Tip: Use specific military terms for better results. The system understands MDMP, ACFT, DA forms, and more.</p>
+        <div className="footer-content">
+          <p>💡 <strong>Pro Tip:</strong> Use specific military terms for better results. The system understands MDMP, ACFT, DA forms, and more.</p>
+          <div className="footer-stats">
+            Session ID: {sessionId.split('-')[1]} • Queries: {history.length}
+          </div>
+        </div>
       </footer>
     </div>
   )
