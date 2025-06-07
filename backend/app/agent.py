@@ -47,6 +47,7 @@ class EnhancedRAGAgent:
             'sop': 'Standard Operating Procedure - set of step-by-step instructions',
             'conop': 'Concept of Operations - verbal or graphic statement that clearly and concisely expresses what the commander intends to accomplish',
             'frago': 'Fragmentary Order - abbreviated form of an operation order issued as needed to change or modify a previous order',
+            'fragord': 'Fragmentary Order - abbreviated form of an operation order issued as needed to change or modify a previous order',
             'opord': 'Operation Order - directive issued by a commander to coordinate the execution of an operation',
             'warnord': 'Warning Order - preliminary notice of an order or action which is to follow',
             
@@ -115,52 +116,90 @@ class EnhancedRAGAgent:
             'class vii': 'major end items including vehicles, weapons systems, and equipment',
             'class viii': 'medical supplies and equipment',
             'class ix': 'repair parts and components',
-            'class x': 'material to support nonmilitary programs'
+            'class x': 'material to support nonmilitary programs',
+            
+            # Military document components and formatting terms
+            'mission statement': 'concise statement of the task and purpose that defines what the unit must accomplish',
+            'execution': 'section of an OPORD that describes how the commander intends to accomplish the mission',
+            'scheme of maneuver': 'description of how the commander envisions the operation unfolding',
+            'concept of support': 'description of how supporting elements will enable the mission',
+            'tasks to subordinate units': 'specific missions assigned to subordinate elements',
+            'command and signal': 'information about command relationships and communications',
+            'coordinating instructions': 'instructions that apply to two or more units',
+            'scheme of fires': 'description of how fires support the maneuver plan',
+            'annex': 'appendix to an operation order providing detailed information on specific topics',
+            'commanders intent': 'clear, concise statement of what the force must do and the conditions the force must establish',
+            'end state': 'desired political and military conditions that define achievement of the commanders objectives'
         }
 
     def _initialize_intent_patterns(self) -> Dict[str, Dict]:
-        """Initialize advanced intent analysis patterns."""
+        """Initialize enhanced intent analysis patterns for better hybrid detection."""
         return {
             'document_generation': {
                 'primary_indicators': [
                     'write', 'create', 'generate', 'draft', 'compose', 'prepare', 'develop',
-                    'build', 'construct', 'formulate', 'make', 'produce'
+                    'build', 'construct', 'formulate', 'make', 'produce', 'design', 'develop'
                 ],
                 'secondary_indicators': [
                     'bullet', 'award', 'citation', 'evaluation', 'report', 'memo', 'letter',
-                    'recommendation', 'assessment', 'paragraph', 'statement', 'summary'
+                    'recommendation', 'assessment', 'paragraph', 'statement', 'summary',
+                    'section', 'annex', 'order', 'brief', 'briefing'
                 ],
                 'form_indicators': [
-                    'da638', 'da31', 'da4856', 'ncoer', 'oer', 'form', 'template'
+                    'da638', 'da31', 'da4856', 'ncoer', 'oer', 'form', 'template',
+                    'opord', 'frago', 'fragord', 'conop', 'sitrep', 'spot report'
+                ],
+                'formatting_indicators': [
+                    'phrase', 'format', 'structure', 'section', 'organize', 'layout',
+                    'arrange', 'word', 'language', 'tone', 'style', 'presentation',
+                    'phrasing', 'wording', 'formatting', 'organization'
                 ],
                 'weight': 0.8
             },
             'information_retrieval': {
                 'primary_indicators': [
                     'what', 'how', 'when', 'where', 'why', 'who', 'explain', 'describe',
-                    'tell', 'show', 'list', 'identify', 'define', 'clarify'
+                    'tell', 'show', 'list', 'identify', 'define', 'clarify', 'include'
                 ],
                 'secondary_indicators': [
                     'role', 'responsibility', 'duty', 'process', 'procedure', 'step',
-                    'requirement', 'regulation', 'standard', 'guideline', 'policy'
+                    'requirement', 'regulation', 'standard', 'guideline', 'policy',
+                    'components', 'elements', 'parts', 'contains', 'consists'
                 ],
                 'knowledge_indicators': [
-                    'during', 'in', 'for', 'about', 'regarding', 'concerning', 'involving'
+                    'during', 'in', 'for', 'about', 'regarding', 'concerning', 'involving',
+                    'within', 'inside', 'part of', 'component of'
                 ],
                 'weight': 0.7
             },
             'hybrid_request': {
                 'primary_indicators': [
                     'using', 'based on', 'according to', 'following', 'incorporating',
-                    'with', 'including', 'considering', 'leveraging'
+                    'with', 'including', 'considering', 'leveraging', 'per', 'via'
                 ],
                 'context_indicators': [
                     'situation', 'mission', 'operation', 'training', 'deployment',
-                    'exercise', 'scenario', 'environment', 'context'
+                    'exercise', 'scenario', 'environment', 'context', 'for a', 'for an'
                 ],
                 'complexity_indicators': [
                     'comprehensive', 'detailed', 'thorough', 'complete', 'full',
-                    'extensive', 'in-depth', 'elaborate'
+                    'extensive', 'in-depth', 'elaborate', 'proper', 'correct'
+                ],
+                'format_knowledge_indicators': [
+                    'phrase', 'format', 'structure', 'section', 'how to write',
+                    'how to phrase', 'what to include', 'how to organize',
+                    'should include', 'should contain', 'goes in', 'belongs in'
+                ],
+                'document_type_indicators': [
+                    'coa statement', 'opord', 'frago', 'fragord', 'conop', 'sitrep', 'spot report',
+                    'evaluation', 'assessment', 'briefing', 'estimate', 'annex', 'appendix',
+                    'mission statement', 'execution section', 'scheme of maneuver',
+                    'concept of support', 'command and signal', 'coordinating instructions'
+                ],
+                'hybrid_keywords': [
+                    'write the', 'draft the', 'create a', 'build a', 'generate the',
+                    'list what', 'what goes in', 'what should be in', 'how do i',
+                    'what to put in', 'what belongs in', 'components of', 'elements of'
                 ],
                 'weight': 0.9
             },
@@ -178,43 +217,48 @@ class EnhancedRAGAgent:
         }
 
     def _initialize_strategy_matrix(self) -> Dict[str, Dict]:
-        """Initialize sophisticated tool strategy determination matrix."""
+        """Initialize enhanced strategy determination matrix for better hybrid detection."""
         return {
             'csv_only': {
                 'conditions': {
-                    'document_generation_high': lambda scores: scores.get('document_generation', 0) >= 0.8 if isinstance(scores, dict) else False,
-                    'form_specific': lambda query: any(form in query.lower() for form in ['da638', 'da31', 'da4856', 'ncoer', 'oer']) if isinstance(query, str) else False,
-                    'template_request': lambda query: any(word in query.lower() for word in ['template', 'format', 'structure']) if isinstance(query, str) else False,
-                    'no_context_needed': lambda scores: scores.get('information_retrieval', 0) < 0.3 if isinstance(scores, dict) else False
+                    'document_generation_high': lambda scores: scores.get('document_generation', 0) >= 0.7 and scores.get('information_retrieval', 0) < 0.3,
+                    'form_specific': lambda query: any(form in query.lower() for form in ['da638', 'da31', 'da4856', 'ncoer', 'oer']) and not any(word in query.lower() for word in ['what', 'how', 'explain', 'describe']),
+                    'template_only': lambda query: any(word in query.lower() for word in ['template', 'format only', 'structure only']) and not any(word in query.lower() for word in ['doctrine', 'definition', 'explain']),
+                    'formatting_focus': lambda query: any(word in query.lower() for word in ['format', 'structure', 'layout']) and not any(doc in query.lower() for doc in ['opord', 'coa', 'frago', 'annex'])
                 },
-                'confidence_boost': 0.2,
+                'confidence_boost': 0.1,
                 'prompt_strategy': 'template_focused'
             },
             'pdf_only': {
                 'conditions': {
-                    'information_retrieval_high': lambda scores: scores.get('information_retrieval', 0) >= 0.7 if isinstance(scores, dict) else False,
-                    'knowledge_query': lambda query: any(term in query.lower() for term in ['what', 'how', 'explain', 'describe', 'role', 'process']) if isinstance(query, str) else False,
-                    'military_procedure': lambda query: any(term in query.lower() for term in ['mdmp', 'process', 'procedure', 'step', 'regulation']) if isinstance(query, str) else False,
-                    'no_generation_needed': lambda scores: scores.get('document_generation', 0) < 0.3 if isinstance(scores, dict) else False
+                    'information_retrieval_high': lambda scores: scores.get('information_retrieval', 0) >= 0.6 and scores.get('document_generation', 0) < 0.3,
+                    'knowledge_query': lambda query: any(term in query.lower() for term in ['what is', 'explain', 'describe', 'definition of', 'role of']) and not any(word in query.lower() for word in ['write', 'create', 'draft', 'format']),
+                    'doctrinal_only': lambda query: any(term in query.lower() for term in ['doctrine', 'regulation', 'manual', 'publication']) and not any(word in query.lower() for word in ['write', 'create', 'draft']),
+                    'pure_knowledge': lambda query: query.lower().startswith(('what is', 'explain', 'describe', 'define')) and not any(word in query.lower() for word in ['section', 'paragraph', 'write', 'create'])
                 },
-                'confidence_boost': 0.15,
+                'confidence_boost': 0.1,
                 'prompt_strategy': 'knowledge_focused'
             },
             'hybrid_approach': {
                 'conditions': {
-                    'hybrid_request_high': lambda scores: scores.get('hybrid_request', 0) >= 0.6 if isinstance(scores, dict) else False,
-                    'complex_generation': lambda scores: (scores.get('document_generation', 0) >= 0.5 and scores.get('information_retrieval', 0) >= 0.4) if isinstance(scores, dict) else False,
-                    'context_dependent': lambda query: any(term in query.lower() for term in ['situation', 'mission', 'specific', 'based on']) if isinstance(query, str) else False,
-                    'military_context': lambda query: len([term for term in self.military_terms.keys() if term in query.lower()]) >= 2 if isinstance(query, str) else False
+                    'hybrid_request_high': lambda scores: scores.get('hybrid_request', 0) >= 0.4,
+                    'balanced_generation_retrieval': lambda scores: (scores.get('document_generation', 0) >= 0.3 and scores.get('information_retrieval', 0) >= 0.3),
+                    'document_plus_knowledge': lambda query: any(doc in query.lower() for doc in ['opord', 'coa', 'frago', 'fragord', 'annex', 'sitrep']) and any(action in query.lower() for action in ['write', 'create', 'draft', 'build', 'generate']),
+                    'section_writing': lambda query: any(section in query.lower() for section in ['section', 'paragraph', 'part']) and any(action in query.lower() for action in ['write', 'create', 'draft', 'phrase']),
+                    'formatting_with_content': lambda query: any(fmt in query.lower() for fmt in ['phrase', 'format', 'structure', 'include', 'goes in']) and any(doc in query.lower() for doc in ['opord', 'coa', 'frago', 'annex', 'statement']),
+                    'what_should_include': lambda query: any(phrase in query.lower() for phrase in ['what should', 'what to include', 'what goes in', 'how do i', 'list what']),
+                    'write_with_doctrine': lambda query: any(action in query.lower() for action in ['write', 'draft', 'create', 'build']) and any(doc in query.lower() for doc in ['mission statement', 'execution', 'scheme of maneuver', 'concept of support', 'command and signal']),
+                    'military_document_creation': lambda query: len([term for term in ['opord', 'coa', 'frago', 'fragord', 'annex', 'sitrep', 'conop'] if term in query.lower()]) >= 1 and len([action for action in ['write', 'create', 'draft', 'build', 'generate', 'phrase', 'format'] if action in query.lower()]) >= 1
                 },
-                'confidence_boost': 0.3,
+                'confidence_boost': 0.4,
                 'prompt_strategy': 'hybrid_reasoning'
             },
             'clarification_required': {
                 'conditions': {
-                    'ambiguous_high': lambda scores: scores.get('clarification_needed', 0) >= 0.6 if isinstance(scores, dict) else False,
-                    'insufficient_context': lambda scores: max(scores.values()) < 0.5 if isinstance(scores, dict) and scores else False,
-                    'conflicting_signals': lambda scores: len([s for s in scores.values() if s >= 0.5]) >= 2 if isinstance(scores, dict) and scores else False
+                    'ambiguous_high': lambda scores: scores.get('clarification_needed', 0) >= 0.6,
+                    'insufficient_context': lambda scores: max(scores.values()) < 0.4 if scores else True,
+                    'conflicting_signals': lambda scores: len([s for s in scores.values() if s >= 0.4]) >= 3 if scores else False,
+                    'very_short_query': lambda query: len(query.split()) <= 3 and not any(doc in query.lower() for doc in ['opord', 'coa', 'frago'])
                 },
                 'confidence_boost': 0.0,
                 'prompt_strategy': 'clarification'
@@ -240,7 +284,7 @@ class EnhancedRAGAgent:
         return expanded_query
 
     def analyze_query_intent(self, query: str) -> Dict[str, any]:
-        """Perform sophisticated intent analysis using multiple indicators."""
+        """Perform enhanced intent analysis with better hybrid detection."""
         query_lower = query.lower()
         expanded_query = self.expand_military_terms(query)
         
@@ -251,7 +295,7 @@ class EnhancedRAGAgent:
             score = 0.0
             indicators_found = []
             
-            # Check primary indicators (with safety check)
+            # Check primary indicators
             if 'primary_indicators' in patterns:
                 primary_matches = sum(1 for indicator in patterns['primary_indicators'] 
                                     if indicator in query_lower)
@@ -271,21 +315,52 @@ class EnhancedRAGAgent:
                 if secondary_matches > 0:
                     indicators_found.extend([ind for ind in patterns['secondary_indicators'] if ind in query_lower])
             
-            # Check tertiary indicators (form, knowledge, context, etc.)
-            for tertiary_key in ['form_indicators', 'knowledge_indicators', 'context_indicators', 'complexity_indicators', 'ambiguous_indicators', 'vague_indicators']:
-                if tertiary_key in patterns:
-                    tertiary_matches = sum(1 for indicator in patterns[tertiary_key] 
-                                         if indicator in query_lower)
-                    tertiary_score = min(tertiary_matches * 0.15, 0.4) * patterns['weight']
-                    score += tertiary_score
-                    
-                    if tertiary_matches > 0:
-                        indicators_found.extend([ind for ind in patterns[tertiary_key] if ind in query_lower])
+            # Check all other indicator types
+            for indicator_type in ['form_indicators', 'knowledge_indicators', 'context_indicators', 
+                                 'complexity_indicators', 'ambiguous_indicators', 'vague_indicators',
+                                 'formatting_indicators', 'format_knowledge_indicators', 
+                                 'document_type_indicators', 'hybrid_keywords']:
+                if indicator_type in patterns:
+                    matches = sum(1 for indicator in patterns[indicator_type] 
+                                if indicator in query_lower)
+                    if matches > 0:
+                        # Different weights for different indicator types
+                        if indicator_type in ['formatting_indicators', 'format_knowledge_indicators', 'hybrid_keywords']:
+                            indicator_score = min(matches * 0.25, 0.5) * patterns['weight']
+                        elif indicator_type in ['document_type_indicators']:
+                            indicator_score = min(matches * 0.3, 0.6) * patterns['weight']
+                        else:
+                            indicator_score = min(matches * 0.15, 0.4) * patterns['weight']
+                        
+                        score += indicator_score
+                        indicators_found.extend([ind for ind in patterns[indicator_type] if ind in query_lower])
             
-            # Military terminology bonus
+            # Enhanced military terminology bonus
             military_term_count = len([term for term in self.military_terms.keys() if term in query_lower])
             military_bonus = min(military_term_count * 0.1, 0.3)
             score += military_bonus
+            
+            # Special hybrid detection bonuses
+            if intent_type == 'hybrid_request':
+                # Bonus for document creation with specific military docs
+                doc_creation_bonus = 0
+                if any(action in query_lower for action in ['write', 'draft', 'create', 'build', 'generate']):
+                    if any(doc in query_lower for doc in ['opord', 'coa', 'frago', 'fragord', 'annex']):
+                        doc_creation_bonus = 0.3
+                
+                # Bonus for section/component questions
+                section_bonus = 0
+                if any(section in query_lower for section in ['section', 'paragraph', 'part', 'component']):
+                    if any(question in query_lower for question in ['what', 'how', 'include', 'goes in']):
+                        section_bonus = 0.2
+                
+                # Bonus for formatting + content questions
+                format_content_bonus = 0
+                if any(fmt in query_lower for fmt in ['phrase', 'format', 'structure']):
+                    if any(doc in query_lower for doc in ['statement', 'section', 'paragraph']):
+                        format_content_bonus = 0.25
+                
+                score += doc_creation_bonus + section_bonus + format_content_bonus
             
             # Normalize score
             intent_scores[intent_type] = min(score, 1.0)
@@ -295,7 +370,10 @@ class EnhancedRAGAgent:
         
         # Calculate confidence based on score separation
         sorted_scores = sorted(intent_scores.values(), reverse=True)
-        confidence = "high" if sorted_scores[0] - sorted_scores[1] >= 0.3 else "medium" if sorted_scores[0] >= 0.5 else "low"
+        if len(sorted_scores) > 1:
+            confidence = "high" if sorted_scores[0] - sorted_scores[1] >= 0.2 else "medium" if sorted_scores[0] >= 0.4 else "low"
+        else:
+            confidence = "high" if sorted_scores[0] >= 0.6 else "medium" if sorted_scores[0] >= 0.4 else "low"
         
         return {
             'primary_intent': primary_intent[0],
@@ -306,7 +384,7 @@ class EnhancedRAGAgent:
         }
 
     def determine_tool_strategy(self, query: str, intent_analysis: Dict) -> Dict[str, any]:
-        """Determine sophisticated tool usage strategy based on multiple factors."""
+        """Determine enhanced tool usage strategy with better hybrid detection."""
         
         strategy_scores = {}
         reasoning_steps = []
@@ -430,13 +508,6 @@ class EnhancedRAGAgent:
             collection = self.embedding_manager.get_collection("pdf_documents")
             count = collection.count()
             print(f"DEBUG: ChromaDB collection 'pdf_documents' has {count} documents")
-            
-            # Try a simple test query
-            test_results = collection.query(
-                query_texts=["mdmp"],
-                n_results=3
-            )
-            print(f"DEBUG: Test query 'mdmp' returned {len(test_results.get('documents', [[]])[0])} results")
             
         except Exception as e:
             print(f"DEBUG: ChromaDB collection test failed: {e}")
@@ -638,7 +709,11 @@ Your role combines Army document creation with deep Army knowledge application. 
 5. **Provide Comprehensive Army Solutions**: Create documents that are both formally correct and tactically sound for Army use
 6. **Stay Within Army Scope**: Only provide assistance for Army-related requests
 
-This is advanced Army document creation that requires both technical formatting skills and deep Army operational knowledge.
+This is advanced Army document creation that requires both technical formatting skills and deep Army operational knowledge. When creating documents:
+- Start with the doctrinal foundation from Army manuals and publications
+- Apply the specific formatting requirements from templates
+- Ensure the content is tactically and technically sound
+- Use proper Army terminology and structure throughout
 """
         
         else:  # clarification strategy
@@ -665,6 +740,7 @@ Focus on being a helpful guide that leads users to more productive Army-focused 
         # Add strategy-specific context
         if strategy['primary_tool'] == 'csv' and strategy.get('secondary_tool') == 'pdf':
             prompt_parts.append("This is a hybrid request requiring both template information and military knowledge.")
+            prompt_parts.append("IMPORTANT: Combine doctrinal knowledge from military manuals with specific formatting requirements from templates.")
         elif strategy['primary_tool'] == 'csv':
             prompt_parts.append("This is primarily a document generation request requiring template formatting.")
         elif strategy['primary_tool'] == 'pdf':
@@ -694,7 +770,8 @@ Focus on being a helpful guide that leads users to more productive Army-focused 
         elif strategy['primary_tool'] == 'pdf':
             prompt_parts.append("\nFocus on providing accurate information from military knowledge sources.")
         elif strategy.get('secondary_tool'):
-            prompt_parts.append("\nCombine template formatting with relevant military knowledge for a comprehensive response.")
+            prompt_parts.append("\nCombine template formatting requirements with relevant military doctrine for a comprehensive response.")
+            prompt_parts.append("Use the PDF sources for doctrinal foundation and the CSV sources for proper formatting and structure.")
         
         return "\n".join(prompt_parts)
 
@@ -845,7 +922,7 @@ Focus on being a helpful guide that leads users to more productive Army-focused 
                 "military_terms_expanded": len(intent_analysis.get('military_terms_found', [])),
                 "strategy_confidence": strategy['strategy_confidence'],
                 "total_sources": len(csv_results) + len(pdf_results),
-                "processing_pipeline": "enhanced_v2.0"
+                "processing_pipeline": "enhanced_v3.0_hybrid_optimized"
             }
         })
         

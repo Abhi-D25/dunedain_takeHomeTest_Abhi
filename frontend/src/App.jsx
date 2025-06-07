@@ -264,7 +264,7 @@ function App() {
                     ref={textareaRef}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Enter your question here... (Ctrl+Enter to submit)"
+                    placeholder="Enter your question here (Ctrl+Enter to submit)"
                     className={`query-input ${isTyping ? 'typing' : ''}`}
                     rows={3}
                     disabled={loading}
@@ -415,7 +415,7 @@ function App() {
                 <div className="response-footer">
                   <div className="sources-summary">
                     <div className="sources-info">
-                      <strong>📚 Sources Used:</strong> {formatSources(response.sources)}
+                      <strong>📚 Sources Used: (Top 5 for each)</strong> {formatSources(response.sources)}
                     </div>
                     {response.sources && (response.sources.csv_results?.length > 0 || response.sources.pdf_results?.length > 0) && (
                       <button 

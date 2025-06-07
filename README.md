@@ -1,45 +1,37 @@
-# RAG Agent System
+# RAG Agent System Documentation
 
-A Retrieval-Augmented Generation (RAG) system with a FastAPI backend and React frontend.
+## Overview
 
-## Setup
+This RAG (Retrieval-Augmented Generation) system is designed to intelligently decide whether to pull information from PDFs, CSV data, or both, based on sophisticated query analysis and intent recognition.
 
-1. Backend Setup:
-   ```bash
-   cd backend
-   python -m venv venv
-   source venv/bin/activate  # On Windows, use: venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
+## How to Run the System
 
-2. Frontend Setup:
-   ```bash
-   cd frontend
-   npm install
-   ```
+### Backend Setup
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
 
-3. Environment Setup:
-   - Copy `backend/.env.example` to `backend/.env`
-   - Add your OpenAI API key to the `.env` file
+# Set up environment in /backend
+cp .env.example .env
+# Add your OpenAI API key to .env file
 
-4. Running the Application:
-   - Backend: 
-     ```bash
-     cd backend
-     python app/main.py
-     ```
-   - Frontend:
-     ```bash
-     cd frontend
-     npm run dev
-     ```
+# Initialize data (processes PDF and CSV)
+python initialize_data.py
 
-The backend will be available at http://localhost:8000 and the frontend at http://localhost:5173.
+# Start the server
+python app/main.py
+```
 
-## Features
+### Frontend Setup
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-- FastAPI backend with CORS support
-- React frontend with Vite
-- OpenAI integration
-- Document processing capabilities
-- Vector database integration with ChromaDB 
+### Access the Application
+- Backend API: http://localhost:8000
+- Frontend: http://localhost:5173
+- API Documentation: http://localhost:8000/docs
