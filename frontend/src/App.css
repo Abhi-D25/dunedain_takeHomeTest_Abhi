@@ -524,9 +524,23 @@
 }
 
 .source-group li {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
   color: #4a5568;
   font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.relevance-score {
+  color: #718096;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.military-terms {
+  font-size: 0.75rem;
+  color: #3182ce;
+  font-style: italic;
+  margin-top: 0.25rem;
 }
 
 .classification-info {

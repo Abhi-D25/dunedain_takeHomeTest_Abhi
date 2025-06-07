@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
 import './App.css'
 
 const API_BASE_URL = 'http://localhost:8000'
@@ -82,11 +81,17 @@ function App() {
     let sourceText = []
     
     if (csv_results && csv_results.length > 0) {
-      sourceText.push(`${csv_results.length} template(s)`)
+      sourceText.push(`template_fields.csv (${csv_results.length} entries)`)
     }
     
     if (pdf_results && pdf_results.length > 0) {
-      sourceText.push(`${pdf_results.length} document section(s)`)
+      // Extract unique source files from PDF results
+      const uniqueSources = [...new Set(pdf_results.map(r => r.source).filter(Boolean))]
+      if (uniqueSources.length > 0) {
+        sourceText.push(`${uniqueSources.join(', ')} (${pdf_results.length} sections)`)
+      } else {
+        sourceText.push(`PDF documents (${pdf_results.length} sections)`)
+      }
     }
     
     return sourceText.length > 0 ? sourceText.join(' + ') : 'No sources'
@@ -318,11 +323,14 @@ function App() {
                     <div className="sources-detail">
                       {response.sources.csv_results?.length > 0 && (
                         <div className="source-group">
-                          <h5>📊 CSV Templates:</h5>
+                          <h5>📊 template_fields.csv:</h5>
                           <ul>
                             {response.sources.csv_results.map((source, idx) => (
                               <li key={idx}>
-                                {source.template_name} - {source.field_label}
+                                <strong>{source.template_name}</strong> - {source.field_label}
+                                {source.relevance_score && (
+                                  <span className="relevance-score"> (Relevance: {(source.relevance_score * 100).toFixed(0)}%)</span>
+                                )}
                               </li>
                             ))}
                           </ul>
@@ -335,7 +343,15 @@ function App() {
                           <ul>
                             {response.sources.pdf_results.map((source, idx) => (
                               <li key={idx}>
-                                Page {source.page} - {source.source}
+                                <strong>{source.source || 'ARN42404-FM_5-0-000-WEB-1.pdf'}</strong> - Page {source.page}
+                                {source.relevance_score && (
+                                  <span className="relevance-score"> (Relevance: {(source.relevance_score * 100).toFixed(0)}%)</span>
+                                )}
+                                {source.military_terms_matched?.length > 0 && (
+                                  <div className="military-terms">
+                                    Military terms: {source.military_terms_matched.join(', ')}
+                                  </div>
+                                )}
                               </li>
                             ))}
                           </ul>
