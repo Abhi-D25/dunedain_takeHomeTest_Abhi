@@ -17,6 +17,8 @@ pip install -r requirements.txt
 cp .env.example .env
 # Add your OpenAI API key to .env file
 
+# Confirm data sources in .env match that in backend/data (PDF and CSV)
+
 # Initialize data (processes PDF and CSV)
 python initialize_data.py
 
