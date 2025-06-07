@@ -425,6 +425,22 @@ class EnhancedRAGAgent:
         search_query = intent_analysis.get('expanded_query', query)
         print(f"DEBUG: PDF search query: '{search_query}'")
         
+        # Debug ChromaDB collection
+        try:
+            collection = self.embedding_manager.get_collection("pdf_documents")
+            count = collection.count()
+            print(f"DEBUG: ChromaDB collection 'pdf_documents' has {count} documents")
+            
+            # Try a simple test query
+            test_results = collection.query(
+                query_texts=["mdmp"],
+                n_results=3
+            )
+            print(f"DEBUG: Test query 'mdmp' returned {len(test_results.get('documents', [[]])[0])} results")
+            
+        except Exception as e:
+            print(f"DEBUG: ChromaDB collection test failed: {e}")
+        
         try:
             results = self.embedding_manager.query_similar(
                 collection_name="pdf_documents",
@@ -435,7 +451,16 @@ class EnhancedRAGAgent:
             
             if not results:
                 print("DEBUG: No results returned from ChromaDB")
-                return []
+                # Try with original query
+                results = self.embedding_manager.query_similar(
+                    collection_name="pdf_documents",
+                    query=query,
+                    n_results=max_results * 2
+                )
+                print(f"DEBUG: Original query '{query}' returned {len(results)} results")
+                
+                if not results:
+                    return []
             
             # Score and filter results based on intent
             scored_results = []

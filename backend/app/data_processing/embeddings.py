@@ -13,9 +13,11 @@ from config import settings
 class EmbeddingManager:
     def __init__(self):
         self.embeddings = OpenAIEmbeddings(api_key=settings.openai_api_key)
-        self.chroma_client = chromadb.Client(ChromaSettings(
-            persist_directory=settings.chroma_persist_directory
-        ))
+        
+        # Create ChromaDB client with proper persistence
+        self.chroma_client = chromadb.PersistentClient(
+            path=settings.chroma_persist_directory
+        )
 
     def get_collection(self, collection_name: str):
         """Get or create a ChromaDB collection."""
